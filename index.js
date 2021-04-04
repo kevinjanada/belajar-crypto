@@ -6,8 +6,42 @@ const {
   naclKeypairFromSeed
 } = require('@polkadot/util-crypto')
 const { hexToU8a, isHex, u8aToHex } = require('@polkadot/util');
+const Gun = require('gun')
+const util = require('util')
 
-async function main() {
+async function gunCrypto() {
+  /**
+   * Crypto types
+   * ECDSA for signing
+   * ECDH for encryption
+   * */
+
+  /*
+  const SEA = Gun.SEA
+  const pair = await SEA.pair()
+  console.log(pair)
+  */
+  gun = Gun()
+  user = gun.user()
+
+  const alias = "Kevin"
+  const pass = "password"
+  /*
+  user.create(alias, pass, (ack) => {
+    console.log(ack)
+  })
+  */
+  user.auth(alias, pass, (ack) => {
+    /*
+    console.log(
+      util.inspect(ack, false, null, true)
+    )
+    */
+    console.log(ack.$._.user)
+  })
+}
+
+async function polkadotCrypto() {
   // we only need to do this once per app, somewhere in our init code
   await cryptoWaitReady()
 
@@ -63,7 +97,12 @@ async function main() {
   console.log('key length: ', u8aToHex(ecdsaPair.publicKey).length)
   console.log('address: ', ecdsaPair.address)
   console.log(' ')
+}
 
+
+async function main() {
+  //await polkadotCrypto()
+  await gunCrypto()
 }
 
 main()
