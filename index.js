@@ -8,7 +8,10 @@ const {
 const { hexToU8a, isHex, u8aToHex } = require('@polkadot/util');
 const Gun = require('gun')
 const util = require('util')
+const nacl = require('tweetnacl');
+const fs = require('fs');
 
+// https://gun.eco/docs/SEA
 async function gunCrypto() {
   /**
    * Crypto types
@@ -41,6 +44,15 @@ async function gunCrypto() {
   })
 }
 
+// https://github.com/dchest/tweetnacl-js
+async function naclCrypto() {
+  const { publicKey, secretKey } = nacl.sign.keyPair()
+
+  console.log('publicKey', u8aToHex(publicKey))
+  console.log('secretKey', u8aToHex(secretKey))
+}
+
+// https://polkadot.js.org/docs/
 async function polkadotCrypto() {
   // we only need to do this once per app, somewhere in our init code
   await cryptoWaitReady()
@@ -77,6 +89,8 @@ async function polkadotCrypto() {
   // naclKeypair produces the same pubkey as ed25519
   console.log('naclKeypair: pubKey', u8aToHex(publicKey))
   console.log('key length: ', u8aToHex(publicKey).length)
+  console.log('naclKeypair: secretKey', u8aToHex(secretKey))
+  console.log('key length: ', u8aToHex(secretKey).length)
   console.log(' ')
 
   const ed25519Pair = keyring.addFromUri(mnemonic, { name: 'ed25519' }, 'ed25519')
@@ -97,12 +111,23 @@ async function polkadotCrypto() {
   console.log('key length: ', u8aToHex(ecdsaPair.publicKey).length)
   console.log('address: ', ecdsaPair.address)
   console.log(' ')
+
+
+  const password = 'test1234'
+  const address = ed25519Pair.address
+  const backup = JSON.stringify(keyring.getPair(address).toJson(password))
+  console.log('backup', backup)
+  fs.writeFile('backup.json', backup, function (err) {
+    if (err) return console.log(err);
+    console.log('Backed Up! : backup.json');
+  });
 }
 
 
 async function main() {
-  //await polkadotCrypto()
-  await gunCrypto()
+  await polkadotCrypto()
+  //await gunCrypto()
+  //await naclCrypto()
 }
 
 main()

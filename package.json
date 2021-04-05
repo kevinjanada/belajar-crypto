@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@polkadot/api": "^4.3.1",
-    "gun": "^0.2020.520"
+    "gun": "^0.2020.520",
+    "tweetnacl": "^1.0.3"
   }
 }
