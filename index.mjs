@@ -1,15 +1,18 @@
-const { Keyring } = require('@polkadot/keyring')
-const {
+import { Keyring } from '@polkadot/keyring'
+import {
   cryptoWaitReady,
   mnemonicGenerate,
   mnemonicToMiniSecret,
   naclKeypairFromSeed
-} = require('@polkadot/util-crypto')
-const { hexToU8a, isHex, u8aToHex } = require('@polkadot/util');
-const Gun = require('gun')
-const util = require('util')
-const nacl = require('tweetnacl');
-const fs = require('fs');
+} from '@polkadot/util-crypto'
+import { bnToBn, u8aToHex, hexToU8a, isHex, isString, stringToU8a, u8aSorted, u8aToString } from '@polkadot/util'
+import Gun from 'gun'
+import util from 'util'
+import nacl from 'tweetnacl'
+import fs from 'fs'
+import keyring from '@polkadot/ui-keyring'
+
+const uiKeyring = keyring
 
 // https://gun.eco/docs/SEA
 async function gunCrypto() {
@@ -117,17 +120,34 @@ async function polkadotCrypto() {
   const address = ed25519Pair.address
   const backup = JSON.stringify(keyring.getPair(address).toJson(password))
   console.log('backup', backup)
-  fs.writeFile('backup.json', backup, function (err) {
-    if (err) return console.log(err);
+
+  // Backup to JSON
+  const backupPromise = new Promise((resolve) => {
+    fs.writeFile('backup.json', backup, function (err) {
+      if (err) return console.log(err);
+      resolve()
+    });
+  })
+  await backupPromise.then(() => {
     console.log('Backed Up! : backup.json');
-  });
+  })
+
+  // Restore from JSON
+  uiKeyring.loadAll({ ss58Format: 42, type: 'sr25519' });
+  const restored = uiKeyring.restoreAccount(JSON.parse(backup), password)
+  console.log('restored', restored)
+  restored.unlock()
 }
 
 
 async function main() {
-  await polkadotCrypto()
-  //await gunCrypto()
-  //await naclCrypto()
+  try {
+    await polkadotCrypto()
+    //await gunCrypto()
+    //await naclCrypto()
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 main()
